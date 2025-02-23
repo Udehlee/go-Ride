@@ -1,29 +1,38 @@
 package models
 
+import (
+	"time"
+)
+
+type User struct {
+	UserID    int       `json:"user_Id"`
+	Email     string    `json:"email" `
+	Password  string    `json:"pass_word"`
+	Role      string    `json:"user_role"` // 'passenger' or 'driver'
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// RideReuest represent a macthing request for a passenger
+type RideRequest struct {
+	PassengerID   int     `json:"passenger_Id"`
+	PassengerName string  `json:"passenger_name"`
+	Latitude      float64 `json:"lat"`
+	Longitude     float64 `json:"lon"`
+	Result        chan Driver
+}
+
+type MatchedRide struct {
+	MatchedRideID int       `json:"id"`
+	DriverID      int       `json:"driverId"`
+	PassengerID   int       `json:"passengerId"`
+	RideStatus    string    `json:"status"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+// Driver represents a driver with location(latitude, longitude)
 type Driver struct {
-	DriverID int    `json:"driver_id"`
-	Email    string `json:"email"`
-	Password string `json:"pass_word"`
-	Ratings  int    `json:"ratings"`
-}
-
-type Passenger struct {
-	PassengerID int    `json:"passenger_id"`
-	Email       string `json:"email"`
-	Password    string `json:"pass_word"`
-}
-
-type Location struct {
+	ID        int     `json:"id"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
-}
-
-type OSMResponse struct {
-	Address struct {
-		HouseNumber string `json:"house_number"`
-		Road        string `json:"road"`
-		City        string `json:"city"`
-		State       string `json:"state"`
-		Country     string `json:"country"`
-	} `json:"address"`
+	Distance  float64 `json:"distance"`
 }
