@@ -1,14 +1,15 @@
 package handlers
 
 import (
-	"github.com/Udehlee/go-Ride/client"
+	"net/http"
+
+	"github.com/Udehlee/go-Ride/models"
 	"github.com/Udehlee/go-Ride/service"
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
 	service *service.Service
-	client  client.OSMClient
 }
 
 func NewHandler(svc *service.Service) *Handler {
@@ -28,5 +29,26 @@ func (h *Handler) Signup(c *gin.Context) {
 
 func (h *Handler) Login(c *gin.Context) {
 	// TODO: Implement User login
+
+}
+
+func (h *Handler) PassengerRequest(c *gin.Context) {
+	var rideReq models.RideRequest
+
+	if err := c.ShouldBindJSON(&rideReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to bind input"})
+		return
+	}
+
+	MatchedRide, err := h.service.RequestRide(rideReq.PassengerID, rideReq.PassengerName, rideReq.Latitude, rideReq.Longitude)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to request a  ride"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "successfully matched passenger to driver",
+		"userinfo": MatchedRide,
+	})
 
 }
