@@ -6,6 +6,12 @@ import (
 	"github.com/Udehlee/go-Ride/models"
 )
 
+type Priority interface {
+	Insert(driver models.Driver)
+	Extract() models.Driver
+	Len() int
+}
+
 // PriorityQueue implements a min-heap for nearest driver selection
 // driverIndx assigns driver id to the index in the []Driver
 type PriorityQueue struct {
@@ -46,4 +52,11 @@ func (pq *PriorityQueue) Extract() models.Driver {
 	driver := pq.drivers[minIdx]
 	pq.drivers = append(pq.drivers[:minIdx], pq.drivers[minIdx+1:]...)
 	return driver
+}
+
+// Len returns the number of drivers in the queue
+func (pq *PriorityQueue) Len() int {
+	pq.mu.Lock()
+	defer pq.mu.Unlock()
+	return len(pq.drivers)
 }
