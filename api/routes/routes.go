@@ -11,6 +11,7 @@ func SetupRoutes(r *gin.Engine, h *handlers.Handler) {
 	r.POST("login", h.Login)
 
 	r.GET("/", h.Index)
-	r.POST("/passenger/request-a-ride", h.PassengerRequest)
+	r.POST("/request-a-ride", h.PassengerRequestHandler)
+	r.POST("/add-driver", h.AddDriverHandler)
 
 }
