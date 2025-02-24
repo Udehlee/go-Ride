@@ -21,7 +21,7 @@ func ConnectDB(config Config) (*sql.DB, error) {
 	}
 
 	if err := runMigrations(Conn); err != nil {
-		log.Fatal("migration unsuccessful")
+		log.Fatalf("Migration unsuccessful: %v", err)
 	}
 
 	if err := Conn.Ping(); err != nil {
@@ -39,16 +39,15 @@ func runMigrations(db *sql.DB) error {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://migrations",
+		"file://db/migrations",
 		"postgres", driver)
 	if err != nil {
 		return fmt.Errorf("failed to create migrate instance: %w", err)
 	}
 
-	if err := m.Up(); err != nil {
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		return fmt.Errorf("failed to run up migrations: %w", err)
 	}
-
 	log.Println("Migrations applied successfully!")
 	return nil
 }

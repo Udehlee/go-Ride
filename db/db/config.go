@@ -17,7 +17,7 @@ type Config struct {
 func LoadConfig() (Config, error) {
 	cfg := Config{}
 
-	port, err := strconv.Atoi("POSTGRES_PORT")
+	port, err := strconv.Atoi(os.Getenv("POSTGRES_PORT"))
 	if err != nil {
 		return cfg, fmt.Errorf("invalid POSTGRES_PORT: %v", err)
 	}
