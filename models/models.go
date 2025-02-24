@@ -4,12 +4,20 @@ import (
 	"time"
 )
 
-type User struct {
-	UserID    int       `json:"user_Id"`
-	Email     string    `json:"email" `
-	Password  string    `json:"pass_word"`
-	Role      string    `json:"user_role"` // 'passenger' or 'driver'
-	CreatedAt time.Time `json:"created_at"`
+// Driver represents a driver with coordinates(latitude, longitude)
+type Driver struct {
+	DriverID   int     `json:"id"`
+	DriverName string  `json:"driver_name"`
+	Latitude   float64 `json:"latitude"`
+	Longitude  float64 `json:"longitude"`
+	Distance   float64 `json:"distance"`
+	Available  bool    `json:"available"`
+}
+
+// Passenger represents a driver with basic db details
+type Passenger struct {
+	PassengerID   int    `json:"passenger_Id"`
+	PassengerName string `json:"passenger_name"`
 }
 
 // RideReuest represent a macthing request for a passenger
@@ -27,12 +35,4 @@ type MatchedRide struct {
 	PassengerID   int       `json:"passengerId"`
 	RideStatus    string    `json:"status"`
 	CreatedAt     time.Time `json:"created_at"`
-}
-
-// Driver represents a driver with location(latitude, longitude)
-type Driver struct {
-	ID        int     `json:"id"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	Distance  float64 `json:"distance"`
 }
