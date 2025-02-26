@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/Udehlee/go-Ride/api/handlers"
 	"github.com/Udehlee/go-Ride/api/routes"
@@ -44,13 +43,7 @@ func main() {
 
 	routes.SetupRoutes(r, h)
 
-	server := &http.Server{
-		Addr:    ":8080",
-		Handler: r,
-	}
-
-	log.Println("Starting server on :8080")
-	if err := server.ListenAndServe(); err != nil {
+	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("could not start server: %s\n", err)
 	}
 }
