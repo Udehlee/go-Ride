@@ -31,18 +31,17 @@ func (h *Handler) Login(c *gin.Context) {
 	panic("Unimplement")
 
 }
-
 func (h *Handler) PassengerRequestHandler(c *gin.Context) {
 	var rideReq models.RideRequest
 
 	if err := c.ShouldBindJSON(&rideReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to bind passenger  request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to bind passenger request"})
 		return
 	}
 
 	MatchedRide, err := h.service.RequestRide(rideReq.PassengerID, rideReq.PassengerName, rideReq.Latitude, rideReq.Longitude)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to request a  ride"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -50,25 +49,21 @@ func (h *Handler) PassengerRequestHandler(c *gin.Context) {
 		"message":  "successfully matched passenger to driver",
 		"userinfo": MatchedRide,
 	})
-
 }
 
 func (h *Handler) AddDriverHandler(c *gin.Context) {
-	var addDriverReq models.Driver
+	var req models.AddDriverRequest
 
-	if err := c.ShouldBindJSON(&addDriverReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to bind driver details"})
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to bind driver request"})
 		return
 	}
 
-	err := h.service.AddDriver(addDriverReq.DriverID, addDriverReq.DriverName, addDriverReq.Latitude, addDriverReq.Longitude)
+	err := h.service.AddDriver(req.DriverID, req.DriverName, req.Latitude, req.Longitude)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to add driver"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "successfully added driver to queue",
-	})
-
+	c.JSON(http.StatusOK, gin.H{"message": "driver successfully added"})
 }
