@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/Udehlee/go-Ride/db/db"
@@ -23,20 +24,24 @@ func NewService(db db.Repo, pq engine.Priority, wp engine.WorkerP) *Service {
 	}
 }
 
-// AddDriver adds a new driver to the system
 func (s *Service) AddDriver(id int, name string, lat, lon float64) error {
 	driver := models.Driver{
 		DriverID:   id,
 		DriverName: name,
 		Latitude:   lat,
 		Longitude:  lon,
+		Distance:   0, // Default distance
+		Available:  true,
 	}
+
 	s.pq.Insert(driver)
 
 	err := s.store.SaveDriver(driver)
 	if err != nil {
+		log.Println("Error saving driver to DB:", err)
 		return err
 	}
+
 	return nil
 }
 
@@ -44,7 +49,7 @@ func (s *Service) AddDriver(id int, name string, lat, lon float64) error {
 // and finds a driver
 // save matched driver and passsenger to db
 func (s *Service) RequestRide(passengerID int, passengerName string, lat, lon float64) (models.MatchedRide, error) {
-	result := make(chan models.Driver)
+	result := make(chan models.Driver, 5)
 
 	req := models.RideRequest{
 		PassengerID:   passengerID,
@@ -55,14 +60,17 @@ func (s *Service) RequestRide(passengerID int, passengerName string, lat, lon fl
 	}
 
 	s.wp.Submit(req)
-	matchedDriver := <-result
 
-	if matchedDriver.DriverID == 0 {
-		fmt.Println("No available drivers")
-		return models.MatchedRide{}, fmt.Errorf("no available drivers")
+	select {
+	case matchedDriver := <-result:
+		if matchedDriver.DriverID == 0 {
+			return models.MatchedRide{}, fmt.Errorf("no available drivers")
+		}
+		return s.SaveMatchedRideRecord(matchedDriver.DriverID, passengerID)
+
+	case <-time.After(5 * time.Second):
+		return models.MatchedRide{}, fmt.Errorf("ride request timed out")
 	}
-
-	return s.SaveMatchedRideRecord(matchedDriver.DriverID, passengerID)
 }
 
 func (s *Service) SaveMatchedRideRecord(driverID, passengerID int) (models.MatchedRide, error) {
