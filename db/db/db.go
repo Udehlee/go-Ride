@@ -45,10 +45,7 @@ func (p *PgConn) SavePassenger(passenger models.Passenger) error {
 }
 
 func (pg *PgConn) SaveMatchedRides(matchedRide models.MatchedRide) error {
-	query := `
-		INSERT INTO matched_rides (driver_id, passenger_id, ride_status, created_at)
-		VALUES ($1, $2, $3, $4)
-	`
+	query := "INSERT INTO matched_rides (driver_id, passenger_id, ride_status, created_at)	VALUES ($1, $2, $3, $4)"
 
 	_, err := pg.Conn.Exec(query, matchedRide.DriverID, matchedRide.PassengerID, matchedRide.RideStatus, matchedRide.CreatedAt)
 	if err != nil {
