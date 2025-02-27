@@ -46,7 +46,6 @@ func (s *Service) AddDriver(id int, name string, lat, lon float64) error {
 }
 
 // RequestRide handles a ride request
-// and finds a driver
 // save matched driver and passsenger to db
 func (s *Service) RequestRide(passengerID int, passengerName string, lat, lon float64) (models.MatchedRide, error) {
 	result := make(chan models.Driver, 5)
