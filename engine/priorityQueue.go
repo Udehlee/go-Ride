@@ -55,7 +55,8 @@ func (pq *PriorityQueue) Insert(driver models.Driver) {
 	pq.heapifyUp(index)
 }
 
-// Extract removes and returns the nearest driver
+// Extract removes and returns the nearest driver by distance
+// Move last element to root and update index
 func (pq *PriorityQueue) Extract() models.Driver {
 	pq.mu.Lock()
 	defer pq.mu.Unlock()
@@ -67,7 +68,6 @@ func (pq *PriorityQueue) Extract() models.Driver {
 	nearest := pq.drivers[0]
 	pq.driverID_Index[nearest.DriverID] = -1 // Mark as removed
 
-	// Move last element to root and update index
 	pq.drivers[0] = pq.drivers[pq.Len()-1]
 	pq.driverID_Index[pq.drivers[0].DriverID] = 0
 	pq.drivers = pq.drivers[:pq.Len()-1]
