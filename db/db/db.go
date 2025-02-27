@@ -9,8 +9,8 @@ import (
 
 type Repo interface {
 	SaveDriver(driver models.Driver) error
-	SavePassenger(driver models.Passenger) error
-	SaveMatchedRides(driver models.MatchedRide) error
+	SavePassenger(passenger models.Passenger) error
+	SaveMatchedRides(matchedRide models.MatchedRide) error
 }
 type PgConn struct {
 	Conn *sql.DB
