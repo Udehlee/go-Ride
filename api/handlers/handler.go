@@ -31,6 +31,9 @@ func (h *Handler) Login(c *gin.Context) {
 	panic("Unimplement")
 
 }
+
+// PassengerRequestHandler handles rideRequest of passengers
+// passengers already has details in database
 func (h *Handler) PassengerRequestHandler(c *gin.Context) {
 	var rideReq models.RideRequest
 
@@ -51,6 +54,8 @@ func (h *Handler) PassengerRequestHandler(c *gin.Context) {
 	})
 }
 
+// AddDriverHandler handles rideRequest of passengers
+// drivers already has details in database
 func (h *Handler) AddDriverHandler(c *gin.Context) {
 	var req models.AddDriverRequest
 
