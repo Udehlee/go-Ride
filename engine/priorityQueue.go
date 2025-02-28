@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"log"
 	"sync"
 
 	"github.com/Udehlee/go-Ride/models"
@@ -40,23 +41,28 @@ func (pq *PriorityQueue) Len() int {
 func (pq *PriorityQueue) GetDrivers() []models.Driver {
 	pq.mu.Lock()
 	defer pq.mu.Unlock()
-	return append([]models.Driver{}, pq.drivers...)
+
+	driversCopy := make([]models.Driver, len(pq.drivers))
+	copy(driversCopy, pq.drivers)
+	return driversCopy
 }
 
 // Insert adds a driver to the queue
-// restores heap properties
 func (pq *PriorityQueue) Insert(driver models.Driver) {
 	pq.mu.Lock()
 	defer pq.mu.Unlock()
 
 	pq.drivers = append(pq.drivers, driver)
 	index := pq.Len() - 1
-	pq.driverID_Index[driver.DriverID] = index // Store position in driverID_Index
+	pq.driverID_Index[driver.DriverID] = index
 	pq.heapifyUp(index)
 }
 
-// Extract removes and returns the nearest driver by distance
-// Move last element to root and update index
+// Extract the nearest driver
+// Correctly delete the driver from index map
+// If only one element was in the heap, remove it and return
+// Move the last driver to the root and update index
+// Reduce heap size
 func (pq *PriorityQueue) Extract() models.Driver {
 	pq.mu.Lock()
 	defer pq.mu.Unlock()
@@ -66,13 +72,20 @@ func (pq *PriorityQueue) Extract() models.Driver {
 	}
 
 	nearest := pq.drivers[0]
-	pq.driverID_Index[nearest.DriverID] = -1 // Mark as removed
+	delete(pq.driverID_Index, nearest.DriverID)
 
-	pq.drivers[0] = pq.drivers[pq.Len()-1]
+	if pq.Len() == 1 {
+		pq.drivers = nil
+		return nearest
+	}
+
+	lastIdx := pq.Len() - 1
+	pq.drivers[0] = pq.drivers[lastIdx]
 	pq.driverID_Index[pq.drivers[0].DriverID] = 0
-	pq.drivers = pq.drivers[:pq.Len()-1]
 
+	pq.drivers = pq.drivers[:lastIdx]
 	pq.heapifyDown(0)
+
 	return nearest
 }
 
@@ -82,60 +95,63 @@ func (pq *PriorityQueue) UpdateDriverDistance(driverID int, newDist float64) {
 	defer pq.mu.Unlock()
 
 	idx, exists := pq.driverID_Index[driverID]
-	if !exists || idx == -1 {
-		return // Driver not in heap
+	if !exists || idx < 0 || idx >= len(pq.drivers) {
+		log.Printf(" DriverID %d not found in heap index", driverID)
+		return
 	}
 
 	oldDist := pq.drivers[idx].Distance
 	pq.drivers[idx].Distance = newDist
 
 	if newDist < oldDist {
-		pq.heapifyUp(idx) // move up if new distance is smaller
+		pq.heapifyUp(idx)
 	} else {
-		pq.heapifyDown(idx) // move down if new distance is larger
+		pq.heapifyDown(idx)
 	}
 }
 
 // heapifyUp restores heap order from bottom to top
-// Swap and update indexMap
-func (pq *PriorityQueue) heapifyUp(i int) {
-	for i > 0 {
-		parent := (i - 1) / 2
-		if pq.drivers[i].Distance >= pq.drivers[parent].Distance {
+// Swap and update driverID_Index
+// Update driverID_Index mapping
+func (pq *PriorityQueue) heapifyUp(idx int) {
+	for idx > 0 {
+		parent := (idx - 1) / 2
+		if pq.drivers[idx].Distance >= pq.drivers[parent].Distance {
 			break
 		}
+		pq.drivers[idx], pq.drivers[parent] = pq.drivers[parent], pq.drivers[idx]
 
-		pq.drivers[i], pq.drivers[parent] = pq.drivers[parent], pq.drivers[i]
-		pq.driverID_Index[pq.drivers[i].DriverID] = i
+		pq.driverID_Index[pq.drivers[idx].DriverID] = idx
 		pq.driverID_Index[pq.drivers[parent].DriverID] = parent
 
-		i = parent
+		idx = parent
 	}
 }
 
-// heapifyDown restores heap order from top to bottom
-// Swap and update indexMap
-func (pq *PriorityQueue) heapifyDown(i int) {
-	size := pq.Len()
-	for {
-		left := 2*i + 1
-		right := 2*i + 2
-		smallest := i
+// F Update driverID_Index mapping
+func (pq *PriorityQueue) heapifyDown(idx int) {
+	lastIdx := len(pq.drivers) - 1
 
-		if left < size && pq.drivers[left].Distance < pq.drivers[smallest].Distance {
+	for {
+		left := 2*idx + 1
+		right := 2*idx + 2
+		smallest := idx
+
+		if left <= lastIdx && pq.drivers[left].Distance < pq.drivers[smallest].Distance {
 			smallest = left
 		}
-		if right < size && pq.drivers[right].Distance < pq.drivers[smallest].Distance {
+		if right <= lastIdx && pq.drivers[right].Distance < pq.drivers[smallest].Distance {
 			smallest = right
 		}
-		if smallest == i {
+		if smallest == idx {
 			break
 		}
 
-		pq.drivers[i], pq.drivers[smallest] = pq.drivers[smallest], pq.drivers[i]
-		pq.driverID_Index[pq.drivers[i].DriverID] = i
+		pq.drivers[idx], pq.drivers[smallest] = pq.drivers[smallest], pq.drivers[idx]
+
+		pq.driverID_Index[pq.drivers[idx].DriverID] = idx
 		pq.driverID_Index[pq.drivers[smallest].DriverID] = smallest
 
-		i = smallest
+		idx = smallest
 	}
 }
