@@ -46,6 +46,7 @@ func (wp *WorkerPool) worker() {
 		wp.processRequest(rideReq)
 	}
 }
+
 func (wp *WorkerPool) processRequest(req models.RideRequest) {
 	if wp.pq.Len() == 0 {
 		req.Result <- models.Driver{}

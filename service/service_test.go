@@ -3,7 +3,6 @@ package service
 import (
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/Udehlee/go-Ride/engine"
 	"github.com/Udehlee/go-Ride/models"
@@ -29,12 +28,6 @@ func (m *MockStore) SavePassenger(passenger models.Passenger) error {
 	return args.Error(0)
 }
 
-func (m *MockStore) Submit(req models.RideRequest) {
-	go func() {
-		time.Sleep(500 * time.Millisecond)                               // Simulate processing delay
-		req.Result <- models.Driver{DriverID: 1, DriverName: "John Doe"} // Modify per test case
-	}()
-}
 func TestAddDriver(t *testing.T) {
 	tests := []struct {
 		name       string
