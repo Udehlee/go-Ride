@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"log"
 	"sync"
 
 	"github.com/Udehlee/go-Ride/models"
@@ -25,7 +26,7 @@ type WorkerPool struct {
 func NewWorkerPool(workers int, pq Priority) *WorkerPool {
 	return &WorkerPool{
 		workers:      workers,
-		rideRequests: make(chan models.RideRequest),
+		rideRequests: make(chan models.RideRequest, 10),
 		pq:           pq,
 	}
 }
@@ -45,31 +46,33 @@ func (wp *WorkerPool) worker() {
 		wp.processRequest(rideReq)
 	}
 }
-
-// processRequest finds the nearest driver for a passenger
-// Update driver distances
-// Extract nearest driver
 func (wp *WorkerPool) processRequest(req models.RideRequest) {
 	if wp.pq.Len() == 0 {
 		req.Result <- models.Driver{}
 		return
 	}
 
-	drivers := wp.pq.GetDrivers() // Safe copy
-	for i := range drivers {
+	drivers := wp.pq.GetDrivers()
+	for _, driver := range drivers {
 		distance := utils.CalculateDistance(
 			req.Latitude, req.Longitude,
-			drivers[i].Latitude, drivers[i].Longitude,
+			driver.Latitude, driver.Longitude,
 		)
-		wp.pq.UpdateDriverDistance(i, distance) // Maintain heap correctness
+
+		wp.pq.UpdateDriverDistance(driver.DriverID, distance)
 	}
 
+	// Extract the nearest driver after updating distances
 	req.Result <- wp.pq.Extract()
 }
 
 // Submit adds a new ride request to the queue
 func (wp *WorkerPool) Submit(req models.RideRequest) {
-	wp.rideRequests <- req
+	select {
+	case wp.rideRequests <- req: // Send if there's space
+	default:
+		log.Println("WorkerPool queue is full, dropping request")
+	}
 }
 
 // Stop shuts down the worker pool
