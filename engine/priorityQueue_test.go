@@ -24,7 +24,7 @@ func TestInsert(t *testing.T) {
 
 }
 
-func TestPriorityQueue_Extract(t *testing.T) {
+func TestExtract(t *testing.T) {
 	tests := []struct {
 		name     string
 		drivers  []models.Driver
