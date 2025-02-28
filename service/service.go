@@ -65,28 +65,23 @@ func (s *Service) RequestRide(passengerID int, passengerName string, lat, lon fl
 		if matchedDriver.DriverID == 0 {
 			return models.MatchedRide{}, fmt.Errorf("no available drivers")
 		}
-		return s.SaveMatchedRideRecord(matchedDriver.DriverID, passengerID)
+
+		matchedRide := models.MatchedRide{
+			DriverID:    matchedDriver.DriverID,
+			PassengerID: passengerID,
+			RideStatus:  "matched",
+			CreatedAt:   time.Now(),
+		}
+
+		if err := s.store.SaveMatchedRides(matchedRide); err != nil {
+			return models.MatchedRide{}, fmt.Errorf("failed to save matched ride: %v", err)
+		}
+
+		return matchedRide, nil
 
 	case <-time.After(5 * time.Second):
 		return models.MatchedRide{}, fmt.Errorf("ride request timed out")
 	}
-}
-
-func (s *Service) SaveMatchedRideRecord(driverID, passengerID int) (models.MatchedRide, error) {
-	matchedRide := models.MatchedRide{
-		DriverID:    driverID,
-		PassengerID: passengerID,
-		RideStatus:  "matched",
-		CreatedAt:   time.Now(),
-	}
-
-	err := s.store.SaveMatchedRides(matchedRide)
-	if err != nil {
-		return models.MatchedRide{}, fmt.Errorf("failed to save matched ride: %w", err)
-	}
-
-	fmt.Printf("Rider %d matched with Driver %d\n", passengerID, driverID)
-	return matchedRide, nil
 }
 
 // Close shuts down the matching service
