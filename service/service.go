@@ -34,9 +34,8 @@ func (s *Service) AddDriver(id int, name string, role string, lat, lon float64) 
 		Available: true,
 	}
 
-	// Properly handle the error returned by Insert
 	if err := s.pq.Insert(driver); err != nil {
-		return err
+		return fmt.Errorf("error adding driver to queue%s", err)
 	}
 
 	return nil
