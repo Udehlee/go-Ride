@@ -49,7 +49,7 @@ func (wp *WorkerPool) worker() {
 
 func (wp *WorkerPool) processRequest(req models.RideRequest) {
 	if wp.pq.Len() == 0 {
-		req.Result <- models.Driver{}
+		req.Result <- models.User{}
 		return
 	}
 
@@ -60,7 +60,7 @@ func (wp *WorkerPool) processRequest(req models.RideRequest) {
 			driver.Latitude, driver.Longitude,
 		)
 
-		wp.pq.UpdateDriverDistance(driver.DriverID, distance)
+		wp.pq.UpdateDriverDistance(driver.ID, distance)
 	}
 
 	// Extract the nearest driver after updating distances
@@ -73,6 +73,7 @@ func (wp *WorkerPool) Submit(req models.RideRequest) {
 	case wp.rideRequests <- req: // Send if there's space
 	default:
 		log.Println("WorkerPool queue is full, dropping request")
+
 	}
 }
 

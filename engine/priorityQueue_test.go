@@ -4,58 +4,97 @@ import (
 	"testing"
 
 	"github.com/Udehlee/go-Ride/models"
-	"github.com/go-playground/assert/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInsert(t *testing.T) {
-	pq := NewPriorityQueue()
-
-	drivers := []models.Driver{
-		{DriverID: 1, Distance: 10},
-		{DriverID: 2, Distance: 5},
-		{DriverID: 3, Distance: 20},
+	tests := []struct {
+		name        string
+		drivers     []models.User
+		insert      models.User
+		expectErr   bool
+		expectedLen int
+	}{
+		{
+			name: "Insert unique drivers",
+			drivers: []models.User{
+				{ID: 1, Distance: 10},
+				{ID: 2, Distance: 5},
+				{ID: 3, Distance: 20},
+			},
+			insert:      models.User{ID: 4, Distance: 15},
+			expectErr:   false,
+			expectedLen: 4,
+		},
+		{
+			name: "Insert duplicate driver",
+			drivers: []models.User{
+				{ID: 1, Distance: 10},
+				{ID: 2, Distance: 5},
+				{ID: 3, Distance: 20},
+			},
+			insert:      models.User{ID: 1, Distance: 15},
+			expectErr:   true,
+			expectedLen: 3,
+		},
 	}
 
-	for _, d := range drivers {
-		pq.Insert(d)
-	}
-	t.Log("Expected:", len(drivers), "Got:", pq.Len())
-	assert.Equal(t, len(drivers), pq.Len())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pq := NewPriorityQueue()
 
+			// Insert initial drivers
+			for _, d := range tt.drivers {
+				_ = pq.Insert(d)
+			}
+
+			// Insert test driver
+			err := pq.Insert(tt.insert)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			// Check queue length
+			assert.Equal(t, tt.expectedLen, pq.Len())
+		})
+	}
 }
 
 func TestExtract(t *testing.T) {
 	tests := []struct {
 		name     string
-		drivers  []models.Driver
-		expected []models.Driver
+		drivers  []models.User
+		expected []models.User
 	}{
 		{
 			name: "Extract in ascending order of distance",
-			drivers: []models.Driver{
-				{DriverID: 1, Distance: 10},
-				{DriverID: 2, Distance: 5}, // Nearest
-				{DriverID: 3, Distance: 20},
+			drivers: []models.User{
+				{ID: 1, Distance: 10},
+				{ID: 2, Distance: 5}, // Nearest
+				{ID: 3, Distance: 20},
 			},
-			expected: []models.Driver{
-				{DriverID: 2, Distance: 5}, // nearest first
-				{DriverID: 1, Distance: 10},
-				{DriverID: 3, Distance: 20}, // Farthest last
+			expected: []models.User{
+				{ID: 2, Distance: 5}, // nearest first
+				{ID: 1, Distance: 10},
+				{ID: 3, Distance: 20}, // Farthest last
 			},
 		},
 		{
 			name: "Single driver",
-			drivers: []models.Driver{
-				{DriverID: 1, Distance: 7},
+			drivers: []models.User{
+				{ID: 1, Distance: 7},
 			},
-			expected: []models.Driver{
-				{DriverID: 1, Distance: 7},
+			expected: []models.User{
+				{ID: 1, Distance: 7},
 			},
 		},
 		{
 			name:     "Empty queue",
-			drivers:  []models.Driver{}, // No drivers inserted
-			expected: []models.Driver{}, // Nothing to extract
+			drivers:  []models.User{}, // No drivers inserted
+			expected: []models.User{}, // Nothing to extract
 		},
 	}
 
@@ -69,7 +108,7 @@ func TestExtract(t *testing.T) {
 
 			for _, exp := range tt.expected {
 				got := pq.Extract()
-				assert.Equal(t, exp.DriverID, got.DriverID)
+				assert.Equal(t, exp.ID, got.ID)
 				assert.Equal(t, exp.Distance, got.Distance)
 			}
 
@@ -82,17 +121,17 @@ func TestExtract(t *testing.T) {
 func TestUpdateDriverDistance(t *testing.T) {
 	tests := []struct {
 		name     string
-		drivers  []models.Driver
+		drivers  []models.User
 		driverID int
 		newDist  float64
 		expOrder []int // Expected order of DriverIDs after update
 	}{
 		{
 			name: "Move Up - Lower Distance",
-			drivers: []models.Driver{
-				{DriverID: 1, Distance: 10},
-				{DriverID: 2, Distance: 20},
-				{DriverID: 3, Distance: 30},
+			drivers: []models.User{
+				{ID: 1, Distance: 10},
+				{ID: 2, Distance: 20},
+				{ID: 3, Distance: 30},
 			},
 			driverID: 3, // Update driver 3's distance
 			newDist:  5, // Should move to the top
@@ -100,10 +139,10 @@ func TestUpdateDriverDistance(t *testing.T) {
 		},
 		{
 			name: "Move Down - Higher Distance",
-			drivers: []models.Driver{
-				{DriverID: 1, Distance: 10},
-				{DriverID: 2, Distance: 5},
-				{DriverID: 3, Distance: 3},
+			drivers: []models.User{
+				{ID: 1, Distance: 10},
+				{ID: 2, Distance: 5},
+				{ID: 3, Distance: 3},
 			},
 			driverID: 2,  // Update driver 2's distance
 			newDist:  15, // Should move down
@@ -111,9 +150,9 @@ func TestUpdateDriverDistance(t *testing.T) {
 		},
 		{
 			name: "Same Distance - No Change",
-			drivers: []models.Driver{
-				{DriverID: 1, Distance: 10},
-				{DriverID: 2, Distance: 20},
+			drivers: []models.User{
+				{ID: 1, Distance: 10},
+				{ID: 2, Distance: 20},
 			},
 			driverID: 1,  // Update driver 1 with the same distance
 			newDist:  10, // No movement expected
@@ -121,8 +160,8 @@ func TestUpdateDriverDistance(t *testing.T) {
 		},
 		{
 			name: "Invalid Driver ID - No Change",
-			drivers: []models.Driver{
-				{DriverID: 1, Distance: 10},
+			drivers: []models.User{
+				{ID: 1, Distance: 10},
 			},
 			driverID: 99, // Driver does not exist
 			newDist:  5,
@@ -141,7 +180,7 @@ func TestUpdateDriverDistance(t *testing.T) {
 
 			gotOrder := []int{}
 			for pq.Len() > 0 {
-				gotOrder = append(gotOrder, pq.Extract().DriverID)
+				gotOrder = append(gotOrder, pq.Extract().ID)
 			}
 
 			assert.Equal(t, tt.expOrder, gotOrder)
