@@ -54,21 +54,21 @@ func (h *Handler) PassengerRequestHandler(c *gin.Context) {
 	})
 }
 
-// AddDriverHandler handles rideRequest of passengers
-// drivers already has details in database
+// AddDriverHandler handles adding driver to queue
 func (h *Handler) AddDriverHandler(c *gin.Context) {
 	var req models.AddDriverRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to bind driver request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
 		return
 	}
 
-	err := h.service.AddDriver(req.DriverID, req.DriverName, req.Latitude, req.Longitude)
+	// Ensure user exists and update role to "driver"
+	err := h.service.AddDriver(req.DriverID, req.FirstName, req.Role, req.Latitude, req.Longitude)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "driver successfully added"})
+	c.JSON(http.StatusOK, gin.H{"message": "Driver successfully added"})
 }
