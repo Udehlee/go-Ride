@@ -8,8 +8,7 @@ import (
 )
 
 type Repo interface {
-	SaveDriver(driver models.Driver) error
-	SavePassenger(passenger models.Passenger) error
+	SaveUser(user models.User) error
 	SaveMatchedRides(matchedRide models.MatchedRide) error
 }
 type PgConn struct {
@@ -22,30 +21,19 @@ func NewPgConn(db *sql.DB) PgConn {
 	}
 }
 
-func (p *PgConn) SaveDriver(driver models.Driver) error {
-	query := "INSERT INTO drivers (driver_name, latitude, longitude) VALUES ($1,$2,$3) RETURNING driver_id, driver_name"
+func (p *PgConn) SaveUser(user models.User) error {
+	query := "INSERT INTO users (first_name, role, latitude, longitude) VALUES ($1, $2, $3, $4) RETURNING id, user_name, role"
 
-	row := p.Conn.QueryRow(query, driver.DriverName, driver.Latitude, driver.Longitude)
-	if err := row.Scan(&driver.DriverID, &driver.DriverName); err != nil {
-		return fmt.Errorf("failed to scan users row: %w", err)
-	}
-
-	return nil
-}
-
-func (p *PgConn) SavePassenger(passenger models.Passenger) error {
-	query := "INSERT INTO passengers (passenger_name) VALUES ($1) RETURNING passenger_id, passenger_name"
-
-	row := p.Conn.QueryRow(query, passenger.PassengerName)
-	if err := row.Scan(&passenger.PassengerID, &passenger.PassengerName); err != nil {
-		return fmt.Errorf("failed to scan users row: %w", err)
+	row := p.Conn.QueryRow(query, user.FirstName, user.Role, user.Latitude, user.Longitude)
+	if err := row.Scan(&user.ID, &user.FirstName, &user.Role); err != nil {
+		return fmt.Errorf("failed to scan user row: %w", err)
 	}
 
 	return nil
 }
 
 func (pg *PgConn) SaveMatchedRides(matchedRide models.MatchedRide) error {
-	query := "INSERT INTO matched_rides (driver_id, passenger_id, ride_status, created_at)	VALUES ($1, $2, $3, $4)"
+	query := "INSERT INTO matched_rides (driver_id, passenger_id, ride_status, created_at)VALUES ($1, $2, $3, $4)"
 
 	_, err := pg.Conn.Exec(query, matchedRide.DriverID, matchedRide.PassengerID, matchedRide.RideStatus, matchedRide.CreatedAt)
 	if err != nil {
