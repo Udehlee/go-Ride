@@ -1,23 +1,28 @@
 package models
 
-type AddDriverRequest struct {
-	DriverID   int     `json:"driver_id" `
-	DriverName string  `json:"driver_name" `
-	Latitude   float64 `json:"latitude" `
-	Longitude  float64 `json:"longitude" `
+type User struct {
+	ID        int     `json:"id"`
+	FirstName string  `json:"first_name"`
+	Role      string  `json:"role"` // "driver" or "passenger"
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Distance  float64 `json:"distance"`  // Distance from a passenger
+	Available bool    `json:"available"` // Whether the driver is available
 }
 
-// Passenger represents a driver with basic db details
-type Passenger struct {
-	PassengerID   int    `json:"passenger_Id"`
-	PassengerName string `json:"passenger_name"`
+type AddDriverRequest struct {
+	DriverID  int     `json:"driver_id" binding:"required"`
+	FirstName string  `json:"first_name" binding:"required"`
+	Role      string  `json:"role" binding:"required"` // "driver"
+	Latitude  float64 `json:"latitude" binding:"required"`
+	Longitude float64 `json:"longitude" binding:"required"`
 }
 
 // RideReuest represent a macthing request for a passenger
 type RideRequest struct {
-	PassengerID   int     `json:"passenger_Id"`
-	PassengerName string  `json:"passenger_name"`
-	Latitude      float64 `json:"lat"`
-	Longitude     float64 `json:"lon"`
-	Result        chan Driver
+	PassengerID   int
+	PassengerName string
+	Latitude      float64
+	Longitude     float64
+	Result        chan User
 }
