@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/Udehlee/go-Ride/db/db"
@@ -24,21 +23,19 @@ func NewService(db db.Repo, pq engine.Priority, wp engine.WorkerP) *Service {
 	}
 }
 
-func (s *Service) AddDriver(id int, name string, lat, lon float64) error {
-	driver := models.Driver{
-		DriverID:   id,
-		DriverName: name,
-		Latitude:   lat,
-		Longitude:  lon,
-		Distance:   0, // Default distance
-		Available:  true,
+func (s *Service) AddDriver(id int, name string, role string, lat, lon float64) error {
+	driver := models.User{
+		ID:        id,
+		FirstName: name,
+		Role:      role,
+		Latitude:  lat,
+		Longitude: lon,
+		Distance:  0,
+		Available: true,
 	}
 
-	s.pq.Insert(driver)
-
-	err := s.store.SaveDriver(driver)
-	if err != nil {
-		log.Println("Error saving driver to DB:", err)
+	// Properly handle the error returned by Insert
+	if err := s.pq.Insert(driver); err != nil {
 		return err
 	}
 
@@ -46,9 +43,9 @@ func (s *Service) AddDriver(id int, name string, lat, lon float64) error {
 }
 
 // RequestRide handles a ride request
-// save matched driver and passsenger to db
+// Saves matched driver and passenger to the database
 func (s *Service) RequestRide(passengerID int, passengerName string, lat, lon float64) (models.MatchedRide, error) {
-	result := make(chan models.Driver, 5)
+	result := make(chan models.User, 1)
 
 	req := models.RideRequest{
 		PassengerID:   passengerID,
@@ -61,13 +58,16 @@ func (s *Service) RequestRide(passengerID int, passengerName string, lat, lon fl
 	s.wp.Submit(req)
 
 	select {
-	case matchedDriver := <-result:
-		if matchedDriver.DriverID == 0 {
+	case <-time.After(10 * time.Second): //
+		return models.MatchedRide{}, fmt.Errorf("ride request timed out")
+
+	case matchedUser := <-result:
+		if matchedUser.ID == 0 {
 			return models.MatchedRide{}, fmt.Errorf("no available drivers")
 		}
 
 		matchedRide := models.MatchedRide{
-			DriverID:    matchedDriver.DriverID,
+			DriverID:    matchedUser.ID,
 			PassengerID: passengerID,
 			RideStatus:  "matched",
 			CreatedAt:   time.Now(),
@@ -78,9 +78,6 @@ func (s *Service) RequestRide(passengerID int, passengerName string, lat, lon fl
 		}
 
 		return matchedRide, nil
-
-	case <-time.After(5 * time.Second):
-		return models.MatchedRide{}, fmt.Errorf("ride request timed out")
 	}
 }
 
