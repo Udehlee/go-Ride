@@ -27,7 +27,7 @@ func TestAddDriver(t *testing.T) {
 		name       string
 		driverID   int
 		driverName string
-		role       string // <-- Add this line
+		role       string
 		lat, lon   float64
 		expErr     bool
 	}{
@@ -35,7 +35,7 @@ func TestAddDriver(t *testing.T) {
 			name:       "Successful Add",
 			driverID:   1,
 			driverName: "Ada Mikel",
-			role:       "Driver", // <-- Provide a role
+			role:       "Driver",
 			lat:        40.7128,
 			lon:        -74.0060,
 			expErr:     false,
@@ -43,7 +43,7 @@ func TestAddDriver(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pq := engine.NewPriorityQueue() // Fresh instance for each test case
+			pq := engine.NewPriorityQueue()
 			service := &Service{pq: pq}
 
 			err := service.AddDriver(tt.driverID, tt.driverName, tt.role, tt.lat, tt.lon)
