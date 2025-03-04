@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/Udehlee/go-Ride/models"
@@ -23,12 +24,14 @@ func (h *Handler) Index(c *gin.Context) {
 }
 
 func (h *Handler) Signup(c *gin.Context) {
-	panic("Unimplement")
+	log.Println("attempting to log in ")
+	panic("Unimplement : login failed")
 
 }
 
 func (h *Handler) Login(c *gin.Context) {
-	panic("Unimplement")
+	log.Println("attempting to sign up ")
+	panic("Unimplement: signup failed")
 
 }
 
@@ -55,6 +58,7 @@ func (h *Handler) PassengerRequestHandler(c *gin.Context) {
 }
 
 // AddDriverHandler handles adding driver to queue
+// Ensure user exists and update role to "driver"
 func (h *Handler) AddDriverHandler(c *gin.Context) {
 	var req models.AddDriverRequest
 
@@ -63,7 +67,6 @@ func (h *Handler) AddDriverHandler(c *gin.Context) {
 		return
 	}
 
-	// Ensure user exists and update role to "driver"
 	err := h.service.AddDriver(req.DriverID, req.FirstName, req.Role, req.Latitude, req.Longitude)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
