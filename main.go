@@ -2,6 +2,9 @@ package main
 
 import (
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/Udehlee/go-Ride/api/handlers"
 	"github.com/Udehlee/go-Ride/api/routes"
@@ -36,6 +39,8 @@ func main() {
 	db := db.NewPgConn(conn.Conn)
 	pq := engine.NewPriorityQueue()
 	wp := engine.NewWorkerPool(workers, pq)
+
+	log.Println("Startint the worker pool...")
 	wp.Start()
 
 	svc := service.NewService(&db, pq, wp)
@@ -43,7 +48,18 @@ func main() {
 
 	routes.SetupRoutes(r, h)
 
-	if err := r.Run(":8080"); err != nil {
-		log.Fatalf("could not start server: %s\n", err)
-	}
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		if err := r.Run(":8080"); err != nil {
+			log.Fatalf("could not start server: %s\n", err)
+		}
+	}()
+
+	// Wait for termination signal
+	<-sigChan
+	log.Println("Shutting down worker pool...")
+	wp.Stop()
+	log.Println("Worker pool shut down gracefully")
 }
