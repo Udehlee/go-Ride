@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/Udehlee/go-Ride/db/db"
@@ -54,6 +55,7 @@ func (s *Service) RequestRide(passengerID int, passengerName string, lat, lon fl
 		Result:        result,
 	}
 
+	log.Println("submitting  ride request")
 	s.wp.Submit(req)
 
 	select {
