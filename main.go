@@ -40,7 +40,7 @@ func main() {
 	pq := engine.NewPriorityQueue()
 	wp := engine.NewWorkerPool(workers, pq)
 
-	log.Println("Startint the worker pool...")
+	log.Println("Starting the worker pool...")
 	wp.Start()
 
 	svc := service.NewService(&db, pq, wp)
