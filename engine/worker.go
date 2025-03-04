@@ -26,7 +26,7 @@ type WorkerPool struct {
 func NewWorkerPool(workers int, pq Priority) *WorkerPool {
 	return &WorkerPool{
 		workers:      workers,
-		rideRequests: make(chan models.RideRequest, 10),
+		rideRequests: make(chan models.RideRequest, 5),
 		pq:           pq,
 	}
 }
