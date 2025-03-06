@@ -34,10 +34,22 @@ POST /add-driver
 
 - request a ride
 ```sh
+{
 	passenger_id : 1
 	"passenger_name: "Ada"
 	lat:  40.7128,
 	lon: -74.0060
+}	
+```
+
+### Example Response
+```sh
+{
+ driver_id : 2,
+ passenger_id : 1,
+ ride_status: "matched"
+ created_at: 2025-03-05 14:30:15.123456789 +0000 UTC
+}
 ```
 
 ### Installation
