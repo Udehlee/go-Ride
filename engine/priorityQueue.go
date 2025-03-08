@@ -135,7 +135,8 @@ func (pq *PriorityQueue) heapifyUp(idx int) {
 	}
 }
 
-// F Update driverID_Index mapping
+// heapifyDown restores the heap order property by moving a node down the heap
+// Update driverID_Index mapping
 func (pq *PriorityQueue) heapifyDown(idx int) {
 	lastIdx := len(pq.drivers) - 1
 
