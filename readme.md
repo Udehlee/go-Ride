@@ -36,7 +36,7 @@ POST /add-driver
 ```sh
 {
 	passenger_id : 1
-	"passenger_name: "Ada"
+	passenger_name: "Ada"
 	lat:  40.7128,
 	lon: -74.0060
 }	
